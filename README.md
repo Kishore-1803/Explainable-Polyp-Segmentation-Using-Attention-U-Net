@@ -41,9 +41,7 @@ CVC-ClinicDB is **never** used for training or model selection.
 | Replication (31.4M params) | 0.8301 | 0.7429 | 0.4589 | 0.3388 | 0.3889 | 2.18× |
 | + SE channel attention | 0.8445 | 0.7622 | 0.5530 | 0.4386 | 0.5267 | 1.80× |
 | + Deep supervision | 0.8415 | 0.7544 | 0.4426 | 0.3237 | 0.3670 | 2.29× |
-| + SE + deep supervision | **0.8560** | **0.7746** | 0.5557 | 0.4368 | 0.4833 | 1.87× |
-| CLAHE preprocessing only | 0.8059 | 0.7190 | 0.5978 | 0.5035 | 0.7439 | 1.00× |
-| **+ SE + deep sup. + CLAHE** | 0.8531 | 0.7739 | **0.7015** | **0.6164** | **0.8445** | **0.92×** |
+| **+ SE + deep sup. + CLAHE** | **0.8531** | **0.7739** | **0.7015** | **0.6164** | **0.8445** | **0.92×** |
 
 <sup>†</sup> Validation means over 5-fold cross-validation; all other rows are held-out
 test means. Rows use the base paper's preprocessing unless CLAHE is named.
@@ -61,9 +59,9 @@ test means. Rows use the base paper's preprocessing unless CLAHE is named.
    while staying calibrated in-domain at 1.06×. It is not illumination-driven: the
    correlation between per-image Dice and frame brightness is only +0.057.
 4. **Two targeted fixes recover most of the gap.** SE channel attention corrects the
-   feature response, luminance-channel CLAHE corrects the input distribution, and
-   they are complementary — neither alone exceeds 0.60 CVC DSC, together they reach
-   0.7015 for **+0.14% parameters**.
+   feature response and luminance-channel CLAHE corrects the input distribution.
+   They are complementary: applied separately they reach 0.5557 and 0.5978 CVC DSC
+   respectively, but together they reach **0.7015** for **+0.14% parameters**.
 5. **Deep supervision alone hurts** cross-dataset performance (0.4426 vs. 0.4589) and
    helps only in combination with SE. We report this negative interaction.
 6. **The paper's dataset description cannot be reproduced.** It attributes 8,000
