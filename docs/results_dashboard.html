@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endoscopic Lesion Detection - Results Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: rgba(22, 28, 45, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --secondary-color: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+            background-attachment: fixed;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .glass-panel {
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--surface-border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4), 0 0 20px 0 var(--primary-glow);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--surface-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        tr:hover td {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .highlight {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .highlight-blue {
+            color: var(--info);
+            font-weight: 600;
+        }
+
+        /* Roadmap Styles */
+        .roadmap {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-phase {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .completed .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .in-progress .status-dot { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
+        .upcoming .status-dot { background: var(--info); box-shadow: 0 0 10px var(--info); }
+        
+        .completed .phase-title { color: var(--success); }
+        .in-progress .phase-title { color: var(--warning); }
+        .upcoming .phase-title { color: var(--info); }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-list li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .task-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 2px solid var(--text-muted);
+        }
+
+        .task-list li.done {
+            color: #e2e8f0;
+        }
+
+        .task-list li.done::before {
+            background: var(--success);
+            border-color: var(--success);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+            background-size: 10px;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .detail-card h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .detail-card p, .detail-card ul {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .detail-card ul {
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .detail-card li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Delay cascade for panels */
+        .glass-panel:nth-child(2) { animation-delay: 0.1s; }
+        .glass-panel:nth-child(3) { animation-delay: 0.2s; }
+        .glass-panel:nth-child(4) { animation-delay: 0.3s; }
+        .glass-panel:nth-child(5) { animation-delay: 0.4s; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Project Results & Roadmap</h1>
+            <p>Endoscopic Lesion Detection & Risk Grading System</p>
+        </header>
+
+        <section class="glass-panel">
+            <h2>Project Context</h2>
+            <div class="details-grid">
+                <div class="detail-card">
+                    <h3>Datasets Used</h3>
+                    <ul>
+                        <li><strong>Kvasir-SEG:</strong> 1000 images (Primary, In-Domain)</li>
+                        <li><strong>CVC-ClinicDB:</strong> 612 images (External, Zero-Shot)</li>
+                    </ul>
+                </div>
+                <div class="detail-card">
+                    <h3>Hyperparameters</h3>
+                    <ul>
+                        <li><strong>Architecture:</strong> Attention U-Net / Std U-Net</li>
+                        <li><strong>Optimization:</strong> Adam (LR: 1e-4), BCE + Dice Loss</li>
+                        <li><strong>Pre-processing:</strong> Standard / CLAHE</li>
+                        <li><strong>Regularization:</strong> Dropout (0.2) tested</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-panel">
+            <h2>In-Domain Results: Kvasir-SEG</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Test Set: 100 Images</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Exp</th>
+                            <th>Architecture</th>
+                            <th>Dropout</th>
+                            <th>Epochs</th>
+                            <th>Preprocessing</th>
+                            <th>Dice</th>
+                            <th>IoU</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>EXP-01</td>
+                            <td>Attn U-Net</td>
+                            <td>None</td>
+                            <td>30</td>
+                            <td>Standard</td>
+                            <td class="highlight">0.8120 ± 0.228</td>
+                            <td class="highlight">0.7307 ± 0.250</td>
+                            <td class="highlight">0.8532 ± 0.212</td>
+                            <td>0.8520 ± 0.232</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-02</td>
+                            <td>Attn U-Net</td>
+                            <td>0.2</td>
+                            <td>50</td>
+                            <td>Standard</td>
+                            <td>0.8093 ± 0.232</td>
+                            <td>0.7298 ± 0.260</td>
+                            <td>0.8229 ± 0.240</td>
+                            <td class="highlight">0.8769 ± 0.212</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-03</td>
+                            <td>Std U-Net</td>
+                            <td>0.2</td>
+                            <td>30</td>
+                            <td>Standard</td>
+                            <td>0.7929 ± 0.206</td>
+                            <td>0.6976 ± 0.240</td>
+                            <td>0.8177 ± 0.241</td>
+                            <td>0.8483 ± 0.199</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-04</td>
+                            <td>Std U-Net</td>
+                            <td>0.2</td>
+                            <td>50</td>
+                            <td>Standard</td>
+                            <td>0.8001 ± 0.245</td>
+                            <td>0.7210 ± 0.268</td>
+                            <td>0.8471 ± 0.226</td>
+                            <td>0.8413 ± 0.246</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-08</td>
+                            <td>Attn U-Net</td>
+                            <td>None</td>
+                            <td>30</td>
+                            <td>CLAHE</td>
+                            <td>0.7953 ± 0.236</td>
+                            <td>0.7106 ± 0.261</td>
+                            <td>0.8461 ± 0.222</td>
+                            <td>0.8350 ± 0.244</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="glass-panel">
+            <h2>Cross-Domain Results: CVC-ClinicDB</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Zero-Shot Evaluation, Test Set: 612 Images</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Exp</th>
+                            <th>Preprocessing</th>
+                            <th>Threshold</th>
+                            <th>Dice</th>
+                            <th>IoU</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>EXP-05</td>
+                            <td>Standard (baseline)</td>
+                            <td>0.5</td>
+                            <td>0.4516 ± 0.319</td>
+                            <td>0.3495 ± 0.284</td>
+                            <td>0.5656 ± 0.353</td>
+                            <td>0.6124 ± 0.388</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-06</td>
+                            <td>Standard (baseline)</td>
+                            <td>0.2</td>
+                            <td>0.4344 ± 0.290</td>
+                            <td>0.3252 ± 0.261</td>
+                            <td>0.4495 ± 0.334</td>
+                            <td>0.7251 ± 0.368</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-07</td>
+                            <td>CLAHE (inference only)</td>
+                            <td>0.5</td>
+                            <td>0.5702 ± 0.302</td>
+                            <td>0.4594 ± 0.291</td>
+                            <td>0.6121 ± 0.326</td>
+                            <td>0.7372 ± 0.341</td>
+                        </tr>
+                        <tr>
+                            <td>EXP-08</td>
+                            <td>CLAHE (train + test)</td>
+                            <td>0.5</td>
+                            <td class="highlight-blue">0.6568 ± 0.329</td>
+                            <td class="highlight-blue">0.5676 ± 0.324</td>
+                            <td class="highlight-blue">0.7897 ± 0.271</td>
+                            <td class="highlight-blue">0.7149 ± 0.363</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="glass-panel">
+            <h2>Project Development Roadmap</h2>
+            
+            <div class="roadmap">
+                <!-- Completed Phase -->
+                <div class="roadmap-phase completed">
+                    <div class="phase-header">
+                        <div class="status-dot"></div>
+                        <span class="phase-title">REVIEW 1: Foundation (Completed)</span>
+                    </div>
+                    <ul class="task-list">
+                        <li class="done"><strong>Stage 01 (Preprocessing):</strong> Basic setup completed (256x256 resizing, Bilinear/NN interpolation, spatial augmentations, ImageNet normalization).</li>
+                        <li class="done"><strong>Stage 02 (Segmentation):</strong> Completed Attention U-Net & Standard U-Net pipelines on Kvasir-SEG with BCE+Dice loss optimization.</li>
+                        <li class="done"><strong>Stage 04 (Explainability):</strong> Partially completed with segmentation-oriented Grad-CAM to visualize model attention.</li>
+                    </ul>
+                </div>
+
+                <!-- Completed Phase 2 -->
+                <div class="roadmap-phase completed">
+                    <div class="phase-header">
+                        <div class="status-dot"></div>
+                        <span class="phase-title">REVIEW 2: Core Intelligence (Completed)</span>
+                    </div>
+                    <ul class="task-list">
+                        <li class="done"><strong>Stage 01 (Preprocessing):</strong> Implement advanced preprocessing (CLAHE). Cross-domain evaluation on CVC-ClinicDB completed (EXP-05 to EXP-08).</li>
+                        <li class="done"><strong>Stage 03 (Classification):</strong> Developed ResNet50 binary classifier (Normal vs. Polyp).</li>
+                        <li class="done"><strong>Stage 04 (Classifier Grad-CAM):</strong> Adapted Grad-CAM to explain the classification decision rather than just the segmentation mask.</li>
+                        <li class="done"><strong>Confidence Score:</strong> Implemented a statistically grounded confidence metric representing prediction reliability.</li>
+                        <li class="done"><strong>Advanced Preprocessing Analysis:</strong> Built Laplacian blur detection, color normalization, and quality filtering.</li>
+                    </ul>
+                </div>
+
+                <!-- Completed Phase 3 -->
+                <div class="roadmap-phase completed">
+                    <div class="phase-header">
+                        <div class="status-dot"></div>
+                        <span class="phase-title">FINAL REVIEW: Integration (Completed)</span>
+                    </div>
+                    <ul class="task-list">
+                        <li class="done"><strong>Stage 05 (Reporting):</strong> Implemented patient-level frame aggregation and automated diagnostic report generation.</li>
+                        <li class="done"><strong>Final Application:</strong> Built an interactive web application (Flask + HTML/JS/CSS) for end-to-end inference and visualization.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</body>
+</html>

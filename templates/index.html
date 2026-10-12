@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EndoCAD — Attention-Guided Lesion Segmentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: #111827;
+            --bg-elevated: #1e293b;
+            --border-subtle: #1f2937;
+            --border-strong: #374151;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --status-success: #10b981;
+            --status-warning: #f59e0b;
+            --status-danger: #ef4444;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 1.5rem;
+        }
+
+        .layout-container {
+            max-width: 1560px;
+            margin: 0 auto;
+        }
+
+        /* ── Header ── */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 1.5rem;
+        }
+        .header-title h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .header-title p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .system-pill {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--status-success);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .system-pill-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--status-success);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--status-success);
+        }
+
+        /* ── Nav Tabs ── */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 0.55rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: #fff;
+            border-color: var(--border-strong);
+        }
+        .tab-btn.active {
+            background: var(--bg-surface);
+            color: #ffffff;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        /* ── Main Two-Column Grid ── */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        /* ── Cards & Panels ── */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .card:last-child { margin-bottom: 0; }
+        .card-header {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ── Form Controls ── */
+        .field-group { margin-bottom: 1rem; }
+        .field-group:last-child { margin-bottom: 0; }
+        .field-label {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .text-input {
+            width: 100%;
+            background: var(--bg-base);
+            border: 1px solid var(--border-strong);
+            color: #ffffff;
+            padding: 0.6rem 0.85rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        /* ── Upload Area ── */
+        .upload-dropzone {
+            border: 2px dashed var(--border-strong);
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: block;
+        }
+        .upload-dropzone:hover {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .upload-dropzone input { display: none; }
+        .upload-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.4rem;
+        }
+        .upload-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .upload-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+        .selected-file-badge {
+            margin-top: 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+            display: none;
+        }
+
+        /* ── Action Buttons ── */
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: var(--accent-primary);
+            color: #ffffff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+        }
+        .btn-primary:disabled {
+            background: var(--border-strong);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-strong);
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        .btn-outline:hover {
+            background: var(--bg-elevated);
+            color: #ffffff;
+        }
+        .btn-danger-outline {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            margin-top: 0.5rem;
+        }
+        .btn-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* ── Session Summary Metrics ── */
+        .session-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .stat-box {
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 0.6rem 0.5rem;
+            text-align: center;
+        }
+        .stat-box-val {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+        .stat-box-lbl {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+        }
+        .frame-history-list {
+            list-style: none;
+            margin-top: 0.75rem;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 0.5rem;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .frame-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.35rem 0;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .frame-history-item:last-child { border-bottom: none; }
+        .frame-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.35rem;
+        }
+
+        /* ── Model Specifications Specs List ── */
+        .spec-list {
+            list-style: none;
+            font-size: 0.8rem;
+        }
+        .spec-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .spec-list li:last-child { border-bottom: none; }
+        .spec-label { color: var(--text-muted); }
+        .spec-val { color: var(--text-secondary); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+
+        /* ── Quality Strip ── */
+        .quality-strip {
+            display: flex;
+            gap: 1.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 1.25rem;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        .quality-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .quality-label { color: var(--text-muted); }
+        .quality-badge {
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            font-size: 0.78rem;
+        }
+        .badge-sharp { background: rgba(16, 185, 129, 0.15); color: var(--status-success); }
+        .badge-blur  { background: rgba(245, 158, 11, 0.15); color: var(--status-warning); }
+        .badge-info  { background: rgba(59, 130, 246, 0.15); color: var(--accent-cyan); }
+
+        /* ── 4-Panel Image Grid ── */
+        .image-quad-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .panel-viewer {
+            background: #000000;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-header {
+            padding: 0.6rem 0.85rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .panel-viewport {
+            aspect-ratio: 1/1;
+            width: 100%;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .panel-viewport img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .panel-placeholder {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 1rem;
+        }
+        .panel-note {
+            padding: 0.45rem 0.85rem;
+            background: rgba(15, 23, 42, 0.8);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-subtle);
+            line-height: 1.35;
+        }
+
+        /* ── Segmentation Results Card ── */
+        .results-summary-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1.4fr 1.4fr;
+            gap: 1rem;
+        }
+        .result-block {
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+        .result-block-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .status-hero {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .status-hero.polyp { color: var(--status-danger); }
+        .status-hero.clean { color: var(--status-success); }
+        
+        .result-metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.82rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .result-metric-row:last-child { border-bottom: none; }
+        .metric-title { color: var(--text-muted); }
+        .metric-data { font-weight: 600; color: #ffffff; }
+
+        .confidence-meter {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 9999px;
+            overflow: hidden;
+            margin: 0.5rem 0 0.25rem;
+        }
+        .confidence-meter-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--status-success);
+            transition: width 0.6s ease;
+        }
+        .confidence-meter-fill.polyp {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
+        /* ── Loading Overlay ── */
+        .loading-curtain {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(6px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .loading-caption {
+            margin-top: 1.2rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ── Patient Report View ── */
+        #tab-report-view { display: none; }
+        .report-embed-frame {
+            width: 100%;
+            height: 82vh;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            background: #ffffff;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1100px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+            .results-summary-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .image-quad-grid { grid-template-columns: 1fr; }
+            .quality-strip { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loader -->
+<div class="loading-curtain" id="loadingCurtain">
+    <div class="spinner"></div>
+    <div class="loading-caption" id="loadingCaption">Executing Attention U-Net inference…</div>
+</div>
+
+<div class="layout-container">
+    <!-- Header -->
+    <header>
+        <div class="header-title">
+            <h1>EndoCAD: Attention-Guided Lesion Segmentation</h1>
+            <p>Academic Research Prototype · Attention U-Net · Segmentation Grad-CAM · Adaptive CLAHE</p>
+        </div>
+        <div class="header-actions">
+            <div class="system-pill">
+                <span class="system-pill-dot"></span>
+                <span>SYSTEM ONLINE · EXP-08 CHECKPOINT</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="tabInferenceBtn" onclick="switchMainTab('inference')">🔬 Frame Analysis</button>
+        <button class="tab-btn" id="tabReportBtn" onclick="switchMainTab('report')">📋 Patient Diagnostic Report</button>
+    </div>
+
+    <!-- ══ TAB 1: FRAME INFERENCE ══ -->
+    <div id="tab-inference-view">
+        <div class="workspace-grid">
+            <!-- Left Sidebar -->
+            <aside class="sidebar-column">
+                <!-- Patient Info & Upload -->
+                <div class="card">
+                    <div class="card-header">Patient & Image Input</div>
+                    
+                    <div class="field-group">
+                        <label class="field-label" for="patientIdInput">Patient ID</label>
+                        <input type="text" id="patientIdInput" class="text-input" value="PATIENT-001" placeholder="e.g. PATIENT-001">
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Endoscopic Image Frame</label>
+                        <label class="upload-dropzone" for="imageFileInput">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-title">Select Colonoscopy Image</div>
+                            <div class="upload-hint">Supported formats: JPG, PNG, TIF</div>
+                            <input type="file" id="imageFileInput" accept="image/*">
+                        </label>
+                        <div class="selected-file-badge" id="selectedFilenameBadge"></div>
+                    </div>
+
+                    <button class="btn btn-primary" id="analyzeBtn" disabled onclick="executeAnalysis()">
+                        <span>⚡ Execute Segmentation Analysis</span>
+                    </button>
+                    <button class="btn btn-outline" id="clearImageBtn" style="display:none;" onclick="resetUploadForNextFrame()">
+                        <span>↻ Analyze Another Frame</span>
+                    </button>
+                </div>
+
+                <!-- Patient Session Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Patient Study Session</span>
+                        <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400;" id="sessionStatusHint">Live Study</span>
+                    </div>
+
+                    <div class="session-stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-box-val" id="statTotalFrames">0</div>
+                            <div class="stat-box-lbl">Frames</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-val" id="statPolypFrames" style="color:var(--status-danger);">0</div>
+                            <div class="stat-box-lbl">Polyps</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-val" id="statCleanFrames" style="color:var(--status-success);">0</div>
+                            <div class="stat-box-lbl">Clean</div>
+                        </div>
+                    </div>
+
+                    <div class="result-metric-row" style="margin-bottom:0.75rem;">
+                        <span class="metric-title">Max Lesion Area</span>
+                        <span class="metric-data" id="statMaxArea">0 px²</span>
+                    </div>
+
+                    <button class="btn btn-primary" style="background:#2563eb;" onclick="openPatientReportTab()">
+                        <span>📄 Generate Patient Report</span>
+                    </button>
+                    <button class="btn btn-danger-outline" onclick="resetPatientSession()">
+                        <span>🗑 Reset Session</span>
+                    </button>
+
+                    <ul class="frame-history-list" id="frameHistoryList">
+                        <li style="color:var(--text-muted);text-align:center;padding:0.5rem 0;font-size:0.75rem;">No frames analyzed yet in this session.</li>
+                    </ul>
+                </div>
+
+                <!-- Architecture Specs -->
+                <div class="card">
+                    <div class="card-header">Model Specifications</div>
+                    <ul class="spec-list">
+                        <li><span class="spec-label">Model</span><span class="spec-val">Attention U-Net</span></li>
+                        <li><span class="spec-label">Parameters</span><span class="spec-val">7,851,773</span></li>
+                        <li><span class="spec-label">Checkpoint</span><span class="spec-val">EXP-08 Verified</span></li>
+                        <li><span class="spec-label">Loss</span><span class="spec-val">BCE + Dice</span></li>
+                        <li><span class="spec-label">Explainability</span><span class="spec-val">Grad-CAM (up4)</span></li>
+                        <li><span class="spec-label">In-Domain Dice</span><span class="spec-val" style="color:var(--status-success);">0.8007</span></li>
+                        <li><span class="spec-label">Cross-Domain Dice</span><span class="spec-val" style="color:var(--accent-cyan);">0.6568</span></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Results Area -->
+            <main class="main-column">
+                <!-- Quality Assessment Strip -->
+                <div class="quality-strip" id="qualityStrip">
+                    <div class="quality-item">
+                        <span class="quality-label">Image Sharpness:</span>
+                        <span class="quality-badge badge-sharp" id="badgeBlur">Awaiting Analysis</span>
+                    </div>
+                    <div class="quality-item">
+                        <span class="quality-label">Exposure Status:</span>
+                        <span class="quality-badge badge-info" id="badgeExposure">Awaiting Analysis</span>
+                    </div>
+                    <div class="quality-item">
+                        <span class="quality-label">Preprocessing:</span>
+                        <span class="quality-badge badge-info" id="badgePreproc">Adaptive CLAHE (LAB)</span>
+                    </div>
+                </div>
+
+                <!-- 4-Panel Inspection Grid -->
+                <div class="image-quad-grid">
+                    <!-- 1. Original -->
+                    <div class="panel-viewer">
+                        <div class="panel-header">
+                            <span>01. Original Image</span>
+                            <span style="color:var(--text-muted);font-weight:400;">Native 256×256</span>
+                        </div>
+                        <div class="panel-viewport" id="viewportOrig">
+                            <div class="panel-placeholder">Upload an endoscopic image to inspect</div>
+                        </div>
+                        <div class="panel-note">Raw colonoscopy frame captured from endoscopic procedure.</div>
+                    </div>
+
+                    <!-- 2. CLAHE -->
+                    <div class="panel-viewer">
+                        <div class="panel-header">
+                            <span>02. CLAHE Enhanced</span>
+                            <span style="color:var(--text-muted);font-weight:400;">LAB L-Channel (Clip=2.0)</span>
+                        </div>
+                        <div class="panel-viewport" id="viewportClahe">
+                            <div class="panel-placeholder">Awaiting contrast enhancement…</div>
+                        </div>
+                        <div class="panel-note">Contrast-limited adaptive histogram equalization enhances mucosal boundary visibility.</div>
+                    </div>
+
+                    <!-- 3. Attention U-Net Prediction -->
+                    <div class="panel-viewer">
+                        <div class="panel-header">
+                            <span>03. Attention U-Net Prediction</span>
+                            <span style="color:var(--text-muted);font-weight:400;">Sigmoid Threshold T=0.5</span>
+                        </div>
+                        <div class="panel-viewport" id="viewportMask">
+                            <div class="panel-placeholder">Awaiting segmentation forward pass…</div>
+                        </div>
+                        <div class="panel-note">Predicted lesion mask overlay (green fill with highlighted outer contour boundary).</div>
+                    </div>
+
+                    <!-- 4. Segmentation Grad-CAM -->
+                    <div class="panel-viewer">
+                        <div class="panel-header">
+                            <span>04. Segmentation Grad-CAM</span>
+                            <span style="color:var(--text-muted);font-weight:400;">Decoder up4 Activations</span>
+                        </div>
+                        <div class="panel-viewport" id="viewportGrad">
+                            <div class="panel-placeholder">Awaiting gradient activation pass…</div>
+                        </div>
+                        <div class="panel-note">Highlights image regions that contributed to the segmentation prediction. Research prototype aid.</div>
+                    </div>
+                </div>
+
+                <!-- Segmentation Result Card -->
+                <div class="card" id="resultsCard">
+                    <div class="card-header">Segmentation Quantitative Summary</div>
+                    
+                    <div class="results-summary-grid">
+                        <!-- Col 1: Detection Status -->
+                        <div class="result-block">
+                            <div class="result-block-title">Detection Assessment</div>
+                            <div class="status-hero clean" id="statusHero">—</div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Segmentation Confidence</span>
+                                <span class="metric-data" id="metricConfidence">—</span>
+                            </div>
+                            <div class="confidence-meter">
+                                <div class="confidence-meter-fill" id="meterConfidenceFill"></div>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Risk Stratification</span>
+                                <span class="metric-data" id="metricRisk">—</span>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Spatial & Area Metrics -->
+                        <div class="result-block">
+                            <div class="result-block-title">Quantitative Lesion Metrics</div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Lesion Area</span>
+                                <span class="metric-data" id="metricArea">—</span>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Frame Area Fraction</span>
+                                <span class="metric-data" id="metricAreaPct">—</span>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Bounding Box [Y, X]</span>
+                                <span class="metric-data" id="metricBbox" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;">—</span>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Loss Form</span>
+                                <span class="metric-data">BCE + Dice</span>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Explainability & Uncertainty -->
+                        <div class="result-block">
+                            <div class="result-block-title">Explainability & Uncertainty</div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Predictive Entropy</span>
+                                <span class="metric-data" id="metricEntropy">—</span>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Dominant Attention Focus</span>
+                                <span class="metric-data" id="metricFocus">—</span>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Peak Attention Intensity</span>
+                                <span class="metric-data" id="metricPeakIntensity">—</span>
+                            </div>
+                            <div class="result-metric-row">
+                                <span class="metric-title">Explainability Target</span>
+                                <span class="metric-data">Decoder up4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ══ TAB 2: PATIENT REPORT EMBED ══ -->
+    <div id="tab-report-view">
+        <div class="card" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+            <div>
+                <strong style="font-size:1.1rem;color:#ffffff;">Patient Diagnostic Report Study</strong>
+                <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.2rem;">Multi-frame aggregated clinical summary with visual inspection gallery and research disclaimer.</p>
+            </div>
+            <div style="display:flex;gap:0.75rem;">
+                <button class="btn btn-outline" style="width:auto;margin:0;" onclick="refreshReportFrame()">↻ Refresh Report</button>
+                <button class="btn btn-primary" style="width:auto;margin:0;" onclick="openReportInNewTab()">↗ Open in New Window</button>
+            </div>
+        </div>
+        <iframe class="report-embed-frame" id="reportIframe" src="about:blank"></iframe>
+    </div>
+</div>
+
+<script>
+// ── State ──
+let currentSelectedFile = null;
+let currentPatientId = 'PATIENT-001';
+
+// ── DOM References ──
+const imageFileInput = document.getElementById('imageFileInput');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const clearImageBtn = document.getElementById('clearImageBtn');
+const selectedFilenameBadge = document.getElementById('selectedFilenameBadge');
+const patientIdInput = document.getElementById('patientIdInput');
+const loadingCurtain = document.getElementById('loadingCurtain');
+const loadingCaption = document.getElementById('loadingCaption');
+
+// ── File Selection ──
+imageFileInput.addEventListener('change', (e) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    currentSelectedFile = file;
+
+    selectedFilenameBadge.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    selectedFilenameBadge.style.display = 'block';
+    analyzeBtn.disabled = false;
+    clearImageBtn.style.display = 'block';
+
+    // Show instant preview in original viewport
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        setViewport('viewportOrig', ev.target.result);
+        setViewport('viewportClahe', null, 'Awaiting contrast analysis…');
+        setViewport('viewportMask', null, 'Awaiting segmentation…');
+        setViewport('viewportGrad', null, 'Awaiting Grad-CAM…');
+    };
+    reader.readAsDataURL(file);
+});
+
+// ── Tab Navigation ──
+function switchMainTab(tab) {
+    const tabInferenceView = document.getElementById('tab-inference-view');
+    const tabReportView = document.getElementById('tab-report-view');
+    const tabInferenceBtn = document.getElementById('tabInferenceBtn');
+    const tabReportBtn = document.getElementById('tabReportBtn');
+
+    if (tab === 'inference') {
+        tabInferenceView.style.display = 'block';
+        tabReportView.style.display = 'none';
+        tabInferenceBtn.classList.add('active');
+        tabReportBtn.classList.remove('active');
+    } else {
+        tabInferenceView.style.display = 'none';
+        tabReportView.style.display = 'block';
+        tabInferenceBtn.classList.remove('active');
+        tabReportBtn.classList.add('active');
+        loadReportFrame();
+    }
+}
+
+function openPatientReportTab() {
+    switchMainTab('report');
+}
+
+function loadReportFrame() {
+    const pid = patientIdInput.value.trim() || 'PATIENT-001';
+    const iframe = document.getElementById('reportIframe');
+    iframe.src = `/api/report/${encodeURIComponent(pid)}?t=${Date.now()}`;
+}
+
+function refreshReportFrame() {
+    loadReportFrame();
+}
+
+function openReportInNewTab() {
+    const pid = patientIdInput.value.trim() || 'PATIENT-001';
+    window.open(`/api/report/${encodeURIComponent(pid)}`, '_blank');
+}
+
+// ── Execute Analysis ──
+async function executeAnalysis() {
+    if (!currentSelectedFile) return;
+
+    const pid = patientIdInput.value.trim() || 'PATIENT-001';
+    currentPatientId = pid;
+
+    showLoading(true, 'Running Attention U-Net and Segmentation Grad-CAM…');
+    analyzeBtn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('file', currentSelectedFile);
+    fd.append('patient_id', pid);
+
+    try {
+        const response = await fetch('/api/analyze', {
+            method: 'POST',
+            body: fd
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        showLoading(false);
+        analyzeBtn.disabled = false;
+
+        renderPipelineResults(data);
+        updateSessionUI(data.session);
+    } catch (err) {
+        showLoading(false);
+        analyzeBtn.disabled = false;
+        alert(`Analysis failed: ${err.message}. Ensure app.py is running on port 5001.`);
+    }
+}
+
+// ── Render Outputs ──
+function renderPipelineResults(data) {
+    const seg = data.segmentation;
+    const q = data.quality;
+    const exp = data.explainability;
+    const imgs = data.images;
+
+    // Viewport images
+    if (imgs) {
+        if (imgs.original) setViewport('viewportOrig', imgs.original);
+        if (imgs.clahe)    setViewport('viewportClahe', imgs.clahe);
+        if (imgs.mask)     setViewport('viewportMask', imgs.mask);
+        if (imgs.gradcam)  setViewport('viewportGrad', imgs.gradcam);
+    }
+
+    // Quality Strip
+    const badgeBlur = document.getElementById('badgeBlur');
+    badgeBlur.textContent = `Laplacian Var: ${q.laplacian_variance} (${q.is_blurred ? 'Blurred' : 'Sharp'})`;
+    badgeBlur.className = `quality-badge ${q.is_blurred ? 'badge-blur' : 'badge-sharp'}`;
+
+    const badgeExp = document.getElementById('badgeExposure');
+    badgeExp.textContent = `Brightness: ${q.brightness_pct}% (${q.is_overexposed ? 'Overexposed' : q.is_underexposed ? 'Underexposed' : 'Optimal'})`;
+    badgeExp.className = `quality-badge ${q.is_overexposed || q.is_underexposed ? 'badge-blur' : 'badge-sharp'}`;
+
+    // Status Hero
+    const statusHero = document.getElementById('statusHero');
+    const isPolyp = seg.polyp_detected;
+    statusHero.textContent = isPolyp ? 'Polyp Detected' : 'No Lesion Detected';
+    statusHero.className = `status-hero ${isPolyp ? 'polyp' : 'clean'}`;
+
+    // Quantitative Metrics
+    document.getElementById('metricConfidence').textContent = `${(seg.confidence * 100).toFixed(1)}%`;
+    const fill = document.getElementById('meterConfidenceFill');
+    fill.style.width = `${(seg.confidence * 100)}%`;
+    fill.className = `confidence-meter-fill ${isPolyp ? 'polyp' : ''}`;
+
+    document.getElementById('metricRisk').textContent = seg.risk_level;
+    document.getElementById('metricArea').textContent = `${seg.lesion_area_px.toLocaleString()} px²`;
+    document.getElementById('metricAreaPct').textContent = `${seg.lesion_area_pct}% of frame`;
+    document.getElementById('metricBbox').textContent = seg.bounding_box && seg.bounding_box.length ? JSON.stringify(seg.bounding_box) : 'None';
+
+    // Explainability & Uncertainty
+    document.getElementById('metricEntropy').textContent = `${seg.entropy} (${seg.entropy < 0.25 ? 'Low Uncertainty' : 'Moderate Uncertainty'})`;
+    document.getElementById('metricFocus').textContent = exp.focus_region;
+    document.getElementById('metricPeakIntensity').textContent = exp.attention_score;
+}
+
+// ── Set Viewport Helper ──
+function setViewport(id, imgSrc, placeholderText) {
+    const el = document.getElementById(id);
+    if (imgSrc) {
+        el.innerHTML = `<img src="${imgSrc}" alt="Diagnostics Viewport">`;
+    } else {
+        el.innerHTML = `<div class="panel-placeholder">${placeholderText || 'Awaiting image…'}</div>`;
+    }
+}
+
+// ── Reset Upload For Next Frame ──
+function resetUploadForNextFrame() {
+    currentSelectedFile = null;
+    imageFileInput.value = '';
+    selectedFilenameBadge.style.display = 'none';
+    clearImageBtn.style.display = 'none';
+    analyzeBtn.disabled = true;
+
+    setViewport('viewportOrig', null, 'Select next endoscopic image frame');
+    setViewport('viewportClahe', null, 'Awaiting contrast analysis…');
+    setViewport('viewportMask', null, 'Awaiting segmentation…');
+    setViewport('viewportGrad', null, 'Awaiting Grad-CAM…');
+}
+
+// ── Update Session UI ──
+function updateSessionUI(session) {
+    if (!session) return;
+    document.getElementById('statTotalFrames').textContent = session.total_frames;
+    document.getElementById('statPolypFrames').textContent = session.polyp_frames;
+    document.getElementById('statCleanFrames').textContent = session.clean_frames;
+    document.getElementById('statMaxArea').textContent = `${session.max_lesion_area_px.toLocaleString()} px²`;
+
+    const list = document.getElementById('frameHistoryList');
+    if (session.recent_frames && session.recent_frames.length > 0) {
+        list.innerHTML = session.recent_frames.map(f => `
+            <li class="frame-history-item">
+                <span>
+                    <span class="frame-status-dot" style="background:${f.polyp_detected ? '#ef4444' : '#10b981'};"></span>
+                    <strong style="color:#ffffff;">${f.frame_id}</strong>
+                    <span style="color:var(--text-muted);margin-left:0.25rem;">(${f.filename.substring(0, 16)})</span>
+                </span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:${f.polyp_detected ? '#fca5a5' : '#86efac'};">
+                    ${f.polyp_detected ? f.lesion_area_px.toLocaleString() + ' px²' : 'Clean'}
+                </span>
+            </li>
+        `).join('');
+    }
+}
+
+// ── Reset Session ──
+async function resetPatientSession() {
+    const pid = patientIdInput.value.trim() || 'PATIENT-001';
+    if (!confirm(`Clear all analyzed frames for ${pid}?`)) return;
+
+    try {
+        await fetch(`/api/session/${encodeURIComponent(pid)}/reset`, { method: 'POST' });
+        document.getElementById('statTotalFrames').textContent = '0';
+        document.getElementById('statPolypFrames').textContent = '0';
+        document.getElementById('statCleanFrames').textContent = '0';
+        document.getElementById('statMaxArea').textContent = '0 px²';
+        document.getElementById('frameHistoryList').innerHTML = '<li style="color:var(--text-muted);text-align:center;padding:0.5rem 0;font-size:0.75rem;">Session cleared. Upload images to begin.</li>';
+
+        // Refresh report iframe if active
+        const iframe = document.getElementById('reportIframe');
+        if (iframe.src !== 'about:blank') {
+            loadReportFrame();
+        }
+    } catch (e) {
+        alert('Failed to reset session.');
+    }
+}
+
+// ── Loader ──
+function showLoading(show, caption) {
+    loadingCurtain.style.display = show ? 'flex' : 'none';
+    if (caption) loadingCaption.textContent = caption;
+}
+</script>
+</body>
+</html>

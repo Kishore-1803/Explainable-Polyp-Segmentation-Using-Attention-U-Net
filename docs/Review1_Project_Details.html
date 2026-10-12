@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endoscopic Lesion Detection & Risk Grading System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px 20px;
+            padding: 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2, h3 {
+            color: #ffffff;
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--accent-primary);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: #93c5fd;
+        }
+
+        p {
+            margin-bottom: 1.2em;
+            font-size: 1.1rem;
+        }
+
+        strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        blockquote {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--accent-primary);
+            margin: 1.5em 0;
+            padding: 1em 1.5em;
+            border-radius: 0 12px 12px 0;
+            font-style: italic;
+            color: #bae6fd;
+            font-size: 1.15rem;
+        }
+
+        pre {
+            background: #1e293b;
+            padding: 1.5em;
+            border-radius: 12px;
+            overflow-x: auto;
+            border: 1px solid var(--card-border);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        pre:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            color: #a78bfa;
+            font-size: 0.95rem;
+        }
+
+        p > code, li > code {
+            background: #1e293b;
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            color: #f472b6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 2em 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            background: rgba(59, 130, 246, 0.2);
+            font-weight: 600;
+            color: #ffffff;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 0.8em;
+            position: relative;
+            padding-left: 1.5em;
+        }
+
+        li::before {
+            content: "•";
+            color: var(--accent-secondary);
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--card-border), transparent);
+            margin: 3em 0;
+        }
+
+        .highlight-card {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 2em;
+            margin: 2em 0;
+            box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.3);
+        }
+        
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot:hover {
+            background: var(--accent-primary);
+            transform: scale(1.5);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-animate {
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Delay for first few elements */
+        .section-animate:nth-child(1) { animation-delay: 0.1s; }
+        .section-animate:nth-child(2) { animation-delay: 0.2s; }
+        .section-animate:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px 10px;
+                padding: 20px;
+            }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .nav-dots { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="section-animate">
+            <h1>Endoscopic Lesion Detection & Risk Grading System</h1>
+            <p style="text-align: center; color: var(--accent-secondary); font-size: 1.2rem; font-weight: 600;">Complete Project Information — Review 1</p>
+        </div>
+
+        <div class="section-animate">
+            <div class="highlight-card">
+                <h2>1. Project Topic</h2>
+                <p><strong>Endoscopic Lesion Detection & Risk Grading System</strong></p>
+                <h3>Current Review</h3>
+                <p><strong>Review 1: Foundation — Polyp Segmentation and Explainability</strong></p>
+                <p>Our development is planned as:</p>
+                <ul>
+                    <li><strong>Review 1 →</strong> Attention U-Net + segmentation + evaluation + Grad-CAM</li>
+                    <li><strong>Review 2 →</strong> Confidence Score</li>
+                    <li><strong>Final →</strong> Complete integrated application</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>2. Base Paper</h2>
+            <ul>
+                <li><strong>Title:</strong> <em>Attention-Guided U-Net With Grad-CAM for Explainable Polyp Segmentation in Colonoscopy Images</em></li>
+                <li><strong>Authors:</strong> Dhairya Gupta and S. Benila</li>
+                <li><strong>Journal:</strong> IEEE Access</li>
+                <li><strong>Year:</strong> 2025</li>
+                <li><strong>Volume:</strong> 13</li>
+                <li><strong>Pages:</strong> 185125–185136</li>
+                <li><strong>DOI:</strong> <a href="https://doi.org/10.1109/ACCESS.2025.3626159" style="color: #60a5fa;">10.1109/ACCESS.2025.3626159</a></li>
+            </ul>
+            <h3>Main idea of the base paper</h3>
+            <p>The base paper combines:</p>
+            <blockquote><strong>Attention-guided U-Net + Grad-CAM</strong></blockquote>
+            <p>The Attention mechanism helps the network focus on relevant regions instead of treating all encoder features equally, while Grad-CAM provides a visual explanation of the model's prediction.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>3. What the Base Paper Does</h2>
+            <p>The base-paper approach is essentially:</p>
+<pre><code>Colonoscopy Image
+        ↓
+Encoder
+        ↓
+Attention Gates
+        ↓
+Decoder
+        ↓
+Polyp Segmentation
+        ↓
+Grad-CAM
+        ↓
+Explainable Output</code></pre>
+            <p>The attention gates are used on the skip connections so that relevant features are emphasized before being passed to the decoder.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>4. Our Project vs Base Paper</h2>
+            <p>This is <strong>very important for your review</strong>.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Area</th>
+                        <th>Base Paper</th>
+                        <th>Our Review 1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Problem</td><td>Polyp segmentation</td><td>Polyp/lesion segmentation</td></tr>
+                    <tr><td>Architecture</td><td>Attention-guided U-Net</td><td>Attention U-Net</td></tr>
+                    <tr><td>Attention Gates</td><td>✅</td><td>✅</td></tr>
+                    <tr><td>Grad-CAM</td><td>✅</td><td>✅</td></tr>
+                    <tr><td>Dataset</td><td>Paper's evaluation protocol</td><td>Kvasir-SEG</td></tr>
+                    <tr><td>Split</td><td>Five-fold CV reported</td><td>80/10/10 split</td></tr>
+                    <tr><td>Train</td><td>Paper setup</td><td>800</td></tr>
+                    <tr><td>Validation</td><td>Paper setup</td><td>100</td></tr>
+                    <tr><td>Test</td><td>Paper setup</td><td>100</td></tr>
+                    <tr><td>Epochs</td><td>Paper reports 50</td><td><strong>30</strong></td></tr>
+                    <tr><td>Loss</td><td>Paper setup</td><td><strong>BCE + Dice</strong></td></tr>
+                    <tr><td>Test evaluation</td><td>Paper protocol</td><td>Independent held-out test</td></tr>
+                    <tr><td>CVC-ClinicDB</td><td>Reported by paper</td><td>❌ Not implemented</td></tr>
+                    <tr><td>Confidence Score</td><td>❌</td><td>🔵 Review 2</td></tr>
+                    <tr><td>Final application</td><td>Paper research system</td><td>🔵 Planned</td></tr>
+                </tbody>
+            </table>
+            <p>So <strong>we should never say we exactly reproduced the paper</strong>. A safer statement is:</p>
+            <blockquote><strong>“Our Review-1 system implements an Attention U-Net–based explainable segmentation pipeline inspired by the base paper, with our own dataset split, training configuration, evaluation procedure and implementation.”</strong></blockquote>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>5. Dataset: Kvasir-SEG</h2>
+            <p>The supplied project uses: <strong>Kvasir-SEG</strong></p>
+            <p>Total: <strong>1,000 image-mask pairs</strong></p>
+            <p>Each sample contains:</p>
+            <ul>
+                <li>RGB colonoscopy image</li>
+                <li>corresponding grayscale segmentation mask</li>
+            </ul>
+            <p>The project code explicitly verifies that every image has a corresponding mask.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>6. Dataset Split</h2>
+            <p>Our actual split is:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Split</th>
+                        <th style="text-align: right;">Images</th>
+                        <th style="text-align: right;">Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Training</td><td style="text-align: right;"><strong>800</strong></td><td style="text-align: right;"><strong>80%</strong></td></tr>
+                    <tr><td>Validation</td><td style="text-align: right;"><strong>100</strong></td><td style="text-align: right;"><strong>10%</strong></td></tr>
+                    <tr><td>Testing</td><td style="text-align: right;"><strong>100</strong></td><td style="text-align: right;"><strong>10%</strong></td></tr>
+                    <tr><td><strong>Total</strong></td><td style="text-align: right;"><strong>1000</strong></td><td style="text-align: right;"><strong>100%</strong></td></tr>
+                </tbody>
+            </table>
+            <p>Random seed: <strong>42</strong> (The split is reproducible and saved).</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>7. Preprocessing</h2>
+            <p>Every image is resized to: <strong>256 × 256</strong></p>
+            <h3>Image</h3>
+            <p>Bilinear interpolation.</p>
+            <h3>Mask</h3>
+            <p>Nearest-neighbor interpolation. This is important because interpolation of masks using bilinear interpolation could introduce unwanted intermediate values.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>8. Data Augmentation</h2>
+            <p>Training augmentation includes:</p>
+            <h3>Spatial augmentation</h3>
+            <ul>
+                <li>Horizontal flip</li>
+                <li>Vertical flip</li>
+                <li>90° rotation</li>
+                <li>180° rotation</li>
+                <li>270° rotation</li>
+            </ul>
+            <p>The same spatial transformation is applied to:</p>
+            <blockquote>Image + corresponding mask</blockquote>
+            <p>so they remain aligned.</p>
+            
+            <h3>Color augmentation</h3>
+            <p>Applied <strong>only to the image</strong>:</p>
+            <ul>
+                <li>Brightness</li>
+                <li>Contrast</li>
+                <li>Saturation</li>
+            </ul>
+            <p>This does not alter the ground-truth mask.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>9. Normalization</h2>
+            <p>ImageNet normalization is used.</p>
+            <h3>Mean</h3>
+            <pre><code>[0.485, 0.456, 0.406]</code></pre>
+            <h3>Standard deviation</h3>
+            <pre><code>[0.229, 0.224, 0.225]</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>10. Dataset Pipeline</h2>
+            <p>The complete preprocessing pipeline is:</p>
+<pre><code>Kvasir-SEG
+     ↓
+Image + Mask Pairing
+     ↓
+256 × 256 Resize
+     ↓
+Spatial Augmentation
+     ↓
+Image-only Color Augmentation
+     ↓
+ImageNet Normalization
+     ↓
+PyTorch Tensor
+     ↓
+Attention U-Net</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>11. Attention U-Net Architecture</h2>
+            <p>Our implementation contains:</p>
+            <h3>Encoder</h3>
+            <p>Four feature-extraction stages. Each uses:</p>
+<pre><code>Convolution
+↓
+Batch Normalization
+↓
+ReLU
+↓
+Convolution
+↓
+Batch Normalization
+↓
+ReLU</code></pre>
+            <p>followed by max pooling.</p>
+            
+            <h3>Channel progression</h3>
+<pre><code>Input: 3 channels
+3
+↓
+32
+↓
+64
+↓
+128
+↓
+256
+↓
+512 Bottleneck</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>12. Bottleneck</h2>
+            <p>The bottleneck is the deepest representation of the network. It contains high-level features extracted from the colonoscopy image. Then the decoder reconstructs the segmentation mask.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>13. Attention Gate</h2>
+            <p>This is one of the important technical components. Instead of directly passing encoder feature <code>x</code> into the decoder, the feature is filtered using an attention mechanism.</p>
+            <p>Conceptually:</p>
+<pre><code>Encoder Feature x
+       +
+Gating Signal g
+       ↓
+  Attention Gate
+       ↓
+Attention Weights α
+       ↓
+Filtered Skip Feature
+       ↓
+Decoder</code></pre>
+            <p>The attention weight is conceptually:</p>
+            <p><strong>α = sigmoid(ψ(ReLU(Wg g + Wx x)))</strong></p>
+            <p>The attention weights range approximately from: <strong>0 → 1</strong>. Higher values indicate stronger attention.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>14. Decoder</h2>
+            <p>The decoder progressively reconstructs the spatial resolution. It combines:</p>
+            <blockquote>Upsampled decoder features + attended encoder features</blockquote>
+            <p>and eventually produces: <strong>1-channel segmentation output</strong> representing:</p>
+<pre><code>0 = Background
+1 = Polyp</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>15. Loss Function</h2>
+            <p>Our project uses:</p>
+            <h3>BCE + Dice Loss</h3>
+            <p>The total loss is: <strong>Ltotal = 1.0 × LBCE + 1.0 × LDice</strong></p>
+            <p><strong>BCE:</strong> Binary Cross Entropy helps with pixel-level classification.</p>
+            <p><strong>Dice Loss:</strong> Helps optimize overlap between Predicted mask ↔ Ground Truth mask. This is particularly useful for segmentation because background can occupy much more area than the lesion.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>16. Training</h2>
+            <p>Our actual training configuration includes:</p>
+            <table>
+                <tbody>
+                    <tr><td>Epochs</td><td><strong>30</strong></td></tr>
+                    <tr><td>Optimizer</td><td><strong>Adam</strong></td></tr>
+                    <tr><td>Loss</td><td><strong>BCE + Dice</strong></td></tr>
+                    <tr><td>Input</td><td><strong>256 × 256</strong></td></tr>
+                    <tr><td>Seed</td><td><strong>42</strong></td></tr>
+                    <tr><td>Validation</td><td>Every epoch</td></tr>
+                    <tr><td>Checkpoint</td><td>Best validation Dice</td></tr>
+                </tbody>
+            </table>
+            <p>Best model: <code>review_1_best.pth</code></p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>17. Training Results</h2>
+            <p>At the beginning: <strong>Training Loss = 1.1687</strong></p>
+            <p>At the end: <strong>Training Loss = 0.3487</strong></p>
+            <p>So training loss decreased significantly.</p>
+            
+            <h3>Training Dice</h3>
+            <p>Initial: <strong>0.4585</strong> | Final: <strong>0.8353</strong></p>
+            
+            <h3>Training IoU</h3>
+            <p>Initial: <strong>0.3034</strong> | Final: <strong>0.7229</strong></p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>18. Validation Results</h2>
+            <p>Initial validation Dice: <strong>0.5762</strong></p>
+            <p><strong>Validation Dice at Epoch 30: 0.8153</strong></p>
+            <p>Validation IoU at final epoch: <strong>0.6931</strong></p>
+            <p>Final validation loss: <strong>0.4045</strong></p>
+            <p><strong>Best model selected using validation Dice.</strong></p>
+            <p>So the model clearly learned meaningful segmentation patterns during training.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>19. Independent Test Evaluation</h2>
+            <p>The test set contains: <strong>100 unseen images</strong></p>
+            <p>The evaluator applies: <strong>Sigmoid → threshold 0.5 → binary mask</strong></p>
+            <p>Then calculates metrics.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <div class="highlight-card">
+                <h2>20. Final Test Metrics</h2>
+                <p>These are the <strong>actual values from your metrics.json</strong>.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th style="text-align: right;">Mean ± Std</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Dice</strong></td><td style="text-align: right;"><strong>0.8120 ± 0.2282</strong></td></tr>
+                        <tr><td><strong>IoU</strong></td><td style="text-align: right;"><strong>0.7307 ± 0.2506</strong></td></tr>
+                        <tr><td><strong>Precision</strong></td><td style="text-align: right;"><strong>0.8532 ± 0.2121</strong></td></tr>
+                        <tr><td><strong>Recall</strong></td><td style="text-align: right;"><strong>0.8520 ± 0.2329</strong></td></tr>
+                        <tr><td><strong>Specificity</strong></td><td style="text-align: right;"><strong>0.9733 ± 0.0485</strong></td></tr>
+                    </tbody>
+                </table>
+                <p>These are the numbers you should use in the Review-1 PPT.</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>21. What Each Metric Means</h2>
+            <ul>
+                <li><strong>Dice:</strong> Measures overlap between predicted segmentation and ground truth. Higher = better overlap. (<strong>Our Dice: 0.8120</strong>)</li>
+                <li><strong>IoU:</strong> Measures intersection relative to union. (<strong>Our IoU: 0.7307</strong>)</li>
+                <li><strong>Precision:</strong> Of pixels predicted as lesion, how many were actually lesion pixels. (<strong>Our Precision: 0.8532</strong>)</li>
+                <li><strong>Recall:</strong> How much of the actual lesion region was successfully detected. (<strong>Our Recall: 0.8520</strong>)</li>
+                <li><strong>Specificity:</strong> How well background pixels are correctly identified as background. (<strong>Our Specificity: 0.9733</strong>)</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>22. Important Observation About Results</h2>
+            <p>Don't show only the average. The standard deviations are relatively large: <strong>Dice SD = 0.2282</strong>.</p>
+            <p><strong>The relatively large standard deviation indicates substantial variation in segmentation performance across individual test images.</strong> Therefore, for your PPT, show:</p>
+            <ul>
+                <li><strong>Good case:</strong> High Dice segmentation.</li>
+                <li><strong>Normal/medium case:</strong> Reasonable segmentation.</li>
+                <li><strong>Difficult case:</strong> Poor segmentation.</li>
+            </ul>
+            <p>This actually makes your presentation <strong>more research-oriented</strong>, because you're demonstrating that you evaluated failure cases rather than hiding them.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>23. Qualitative Evaluation</h2>
+            <p>Our visualization pipeline produces:</p>
+<pre><code>Original Image
+      ↓
+Ground Truth Mask
+      ↓
+Predicted Mask
+      ↓
+Boundary Overlay
+      ↓
+Grad-CAM Explanation</code></pre>
+            <p>The supplied project has multiple generated visualization images. These should be used directly in the PPT/application.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>24. Boundary Overlay</h2>
+            <p>The predicted segmentation boundary is displayed over the original image. This makes it easier to visually compare:</p>
+            <blockquote>where the model thinks the lesion is</blockquote>
+            <p>against the actual image.</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>25. Grad-CAM</h2>
+            <p>Our project implements a <strong>segmentation-oriented Grad-CAM</strong>. The implementation:</p>
+            <ol>
+                <li>Captures bottleneck activations.</li>
+                <li>Captures gradients.</li>
+                <li>Performs forward propagation.</li>
+                <li>Computes the segmentation output.</li>
+                <li>Uses the sum of segmentation logits as the score.</li>
+                <li>Performs backward propagation.</li>
+                <li>Computes channel weights using global average pooling of gradients.</li>
+                <li>Weights the activations.</li>
+                <li>Applies ReLU.</li>
+                <li>Upsamples the heatmap to 256 × 256.</li>
+                <li>Normalizes the heatmap.</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>26. Correct Way to Explain Grad-CAM</h2>
+            <p>Say:</p>
+            <blockquote><strong>“Grad-CAM provides a post-hoc visual indication of the regions contributing to the segmentation output.”</strong></blockquote>
+            <p>Do <strong>not</strong> say:</p>
+            <p><span style="color: #ef4444;">“Grad-CAM proves that the attention gates are working.”</span> (That is too strong).</p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>27. Review-1 Verification</h2>
+            <p>We also have a pipeline verification script. It checks:</p>
+            <ul>
+                <li><strong>Model:</strong> Forward pass, Output dimensions, Backward pass, Gradient availability</li>
+                <li><strong>Input:</strong> Image transformation, Mask transformation, Tensor dimensions, Normalization, Binary mask values</li>
+            </ul>
+            <p>Expected image: <strong>3 × 256 × 256</strong></p>
+            <p>Expected mask: <strong>1 × 256 × 256</strong></p>
+            <p>Expected model output: <strong>1 × 256 × 256</strong></p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>28. What We Have Actually Completed</h2>
+            <h3>✅ Completed</h3>
+            <ul>
+                <li><strong>Dataset:</strong> Kvasir-SEG, 1000 images, paired masks, 800/100/100 split</li>
+                <li><strong>Preprocessing:</strong> Resize, normalization, augmentation, synchronized image-mask transformation</li>
+                <li><strong>Model:</strong> Attention U-Net, Attention Gates</li>
+                <li><strong>Training:</strong> BCE + Dice, Adam, 30 epochs, validation, checkpoint</li>
+                <li><strong>Testing:</strong> independent test set, Dice, IoU, Precision, Recall, Specificity</li>
+                <li><strong>Explainability:</strong> segmentation-oriented Grad-CAM</li>
+                <li><strong>Outputs:</strong> learning curves, metrics JSON, training history, segmentation visualizations, Grad-CAM visualizations, trained model</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>29. What Is NOT Completed (Updated for Final Review)</h2>
+            <p>This is equally important. Many items previously missing have now been built!</p>
+            <ul>
+                <li>✅ <strong>Confidence Score:</strong> Implemented (using predictive entropy and distance from decision boundary).</li>
+                <li>✅ <strong>Risk Classification & Clinical diagnosis:</strong> Implemented a binary ResNet50 classifier (Normal vs Polyp) with automated diagnostic report generation. *(Specific Hyperplastic vs Adenoma subtype classification remains out of scope).*</li>
+                <li>❌ <strong>Cancer prediction:</strong> Not implemented (out of scope).</li>
+                <li>✅ <strong>CVC-ClinicDB evaluation:</strong> Completed! Evaluated zero-shot cross-domain generalization on 612 images using CLAHE preprocessing.</li>
+                <li>❌ <strong>Five-fold cross-validation:</strong> Not implemented. We utilize a strict 80/10/10 dataset split instead.</li>
+                <li>❌ <strong>Real-time FPS benchmark:</strong> Not implemented.</li>
+                <li>✅ <strong>Final polished application:</strong> Completed! Built a highly advanced, interactive AI web dashboard for end-to-end inference.</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <div class="highlight-card">
+                <h2>30. Review 1 Final Statement</h2>
+                <p>For your PPT, the cleanest statement is:</p>
+                <blockquote><strong>In Review 1, we developed and evaluated an Attention U-Net–based polyp segmentation pipeline using the Kvasir-SEG dataset. The system includes synchronized preprocessing, BCE+Dice optimization, independent test evaluation using Dice, IoU, Precision, Recall and Specificity, and segmentation-oriented Grad-CAM for visual explainability.</strong></blockquote>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>31. Project Roadmap: Review 1 to Final</h2>
+            <p>Our complete system is built incrementally across three review stages.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Review 1</th>
+                        <th>Review 2</th>
+                        <th>Final</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>01 Preprocessing</strong></td><td>Basic ✅</td><td>CLAHE + Blur + Color ⭐</td><td>Integrated</td></tr>
+                    <tr><td><strong>02 Segmentation</strong></td><td><strong>Complete ✅</strong></td><td>Improve/compare</td><td>Integrated</td></tr>
+                    <tr><td><strong>03 Classification</strong></td><td>❌</td><td><strong>Build ⭐</strong></td><td>Integrated</td></tr>
+                    <tr><td><strong>04 Grad-CAM</strong></td><td>Segmentation 🟡</td><td><strong>Classifier Grad-CAM ⭐</strong></td><td>Integrated</td></tr>
+                    <tr><td><strong>Confidence</strong></td><td>❌</td><td><strong>Build ⭐</strong></td><td>Integrated</td></tr>
+                    <tr><td><strong>05 Reporting</strong></td><td>❌</td><td>—</td><td><strong>Build ⭐</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>32. Review 1 — What We Have Done</h2>
+            
+            <h3>Stage 01 — Preprocessing (Basic completed)</h3>
+            <p>We already have: 256×256 resizing, Bilinear interpolation (images), Nearest-neighbor interpolation (masks), spatial flips/rotations, Image-only color augmentation, ImageNet normalization, and Image-mask synchronization.</p>
+            <p><em>(Enhanced preprocessing like CLAHE, Laplacian blur detection, Color normalization, and Quality filtering are NOT done yet).</em></p>
+
+            <h3>Stage 02 — Lesion Segmentation (✅ COMPLETE)</h3>
+            <p>We have built and evaluated the Attention U-Net on Kvasir-SEG (800/100/100 split) with BCE + Dice loss.</p>
+
+            <h3>Stage 04 — Explainability (🟡 Partially complete)</h3>
+            <p>We currently have <strong>segmentation-oriented Grad-CAM</strong> explaining the lesion localization.</p>
+            <pre><code>Image → Attention U-Net → Segmentation → Grad-CAM</code></pre>
+            
+            <p><em>Stages 03 (Classification) and 05 (Reporting) are ❌ NOT DONE yet.</em></p>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>33. Review 2 — Building Core Intelligence ⭐</h2>
+            <p>This is where our major system extensions happen.</p>
+            
+            <ul>
+                <li><strong>1. Complete Stage 01:</strong> Add CLAHE, Laplacian Blur Detection, Color Normalization, and Quality Filtering, then compare against the baseline.</li>
+                <li><strong>2. Build Stage 03 (Classification):</strong> Implement a ResNet50 / EfficientNet-B3 classifier to distinguish Normal vs Polyp on a new dataset (Hyper-Kvasir). Evaluate and extract metrics.</li>
+                <li><strong>3. Complete Stage 04 (Classifier Grad-CAM):</strong> Transition Grad-CAM to explain the classification decision:
+<pre><code>Image → Classifier → Normal/Polyp → Classifier Grad-CAM</code></pre>
+                </li>
+                <li><strong>4. Add Confidence Score:</strong> Derive a true reliability score from the model's probabilities to assess confidence in the prediction.</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <h2>34. Final Review — Stage 05 (Reporting)</h2>
+            <p>We integrate the complete pipeline into patient-level reporting and the final application.</p>
+<pre><code>Multiple Frames → Patient-level Aggregation → Segmentation + Classification → Grad-CAM + Confidence → PDF/HTML Report</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section-animate">
+            <div class="highlight-card" style="background: linear-gradient(145deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1)); border-color: rgba(245, 158, 11, 0.3);">
+                <h2>⭐ The Project Story</h2>
+                
+                <p><strong>Review 1:</strong> “We built the segmentation foundation and demonstrated quantitative performance and explainability.”</p>
+                <p><strong>Review 2:</strong> “We extend the system with enhanced preprocessing, polyp classification, classifier-based explainability, and prediction confidence.”</p>
+                <p><strong>Final:</strong> “We integrate the complete pipeline into patient-level reporting and the final application.”</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Intersection Observer to trigger scroll animations -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = `fadeIn 0.8s ease-out forwards`;
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.section-animate').forEach((el) => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

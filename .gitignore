@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------- Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# ------------------------------------------------------------------- OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --------------------------------------------------------------- Secrets
+.env
+kaggle.json
+*.key
+
+# ================================================================== DATA
+# Datasets are public downloads -- see README for how to fetch them.
+Kvasir-SEG/
+cvc_data/
+hyper_kvasir_data/
+
+# Preprocessing cache, rebuilt by experiments/paper_replication/build_cache.py
+_cache/
+
+# ============================================================== ARTEFACTS
+# Trained weights (~120 MB each). Too large for Git; see README.
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# Experiment OUTPUTS. The experiment CODE in experiments/ IS tracked --
+# only the generated metrics, plots and per-image visualisations are ignored.
+results/
+
+# Superseded material kept locally for reference only.
+_archive/
+
+# ---------------------------------------------------------------- Uploads
+static/uploads/
+*.log
+
+# =============================== TRACKED ON PURPOSE =======================
+# These are small, and they are what makes the work reproducible:
+#   experiments/**/*.py     training / evaluation / figure scripts
+#   experiments/**/*.json    configs and split indices
+#   src/**                   the library itself
+#   app.py, templates/       the web application
+#   requirements.txt, README.md
+!experiments/**/*.py
+!experiments/**/*.json
+!experiments/**/*.md
